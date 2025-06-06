@@ -1,13 +1,13 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { logger } from '../config/logger.js';
-import type { SonarrConfig } from '../config/config.js';
+import { logger } from '../config/logger';
+import type { SonarrConfig } from '../config/config';
 import type {
     Series, Episode, EpisodeFile, QueueItem, HistoryItem, CalendarItem,
     SystemStatus, DiskSpace, QualityProfile, LanguageProfile, CustomFormat,
     RootFolder, Indexer, DownloadClient, TvdbSearchResult, Release,
     Activity, Tag, WantedEpisode, PaginatedResponse, PaginationParams,
     FilterParams, AddSeriesOptions
-} from '../types/index.js';
+} from '../types/index';
 
 /**
  * Base API error class

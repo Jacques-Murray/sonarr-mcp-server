@@ -1,5 +1,5 @@
 import winston from 'winston';
-import { env } from './environment.js';
+import { env } from './environment';
 
 /**
  * Logger configuration

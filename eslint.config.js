@@ -6,6 +6,7 @@ export default [
     eslint.configs.recommended,
     {
         files: ['**/*.ts'],
+        ignores: ['tests/**/*.ts'],
         languageOptions: {
             parser: tsparser,
             parserOptions: {
@@ -26,6 +27,40 @@ export default [
             'prefer-const': 'error',
             'no-var': 'error',
             'no-console': 'warn',
+        },
+    },
+    {
+        files: ['tests/**/*.ts'],
+        languageOptions: {
+            parser: tsparser,
+            parserOptions: {
+                ecmaVersion: 2022,
+                sourceType: 'module',
+                project: './tsconfig.json',
+            },
+            globals: {
+                jest: 'readonly',
+                describe: 'readonly',
+                it: 'readonly',
+                expect: 'readonly',
+                beforeEach: 'readonly',
+                afterEach: 'readonly',
+                beforeAll: 'readonly',
+                afterAll: 'readonly',
+            },
+        },
+        plugins: {
+            '@typescript-eslint': tseslint,
+        },
+        rules: {
+            ...tseslint.configs.recommended.rules,
+            '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+            '@typescript-eslint/no-explicit-any': 'warn',
+            '@typescript-eslint/explicit-function-return-type': 'off',
+            '@typescript-eslint/no-non-null-assertion': 'off',
+            'prefer-const': 'error',
+            'no-var': 'error',
+            'no-console': 'off',
         },
     },
     {

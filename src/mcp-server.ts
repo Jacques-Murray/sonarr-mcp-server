@@ -24,12 +24,12 @@ import {
     ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 
-import { logger } from './config/logger.js';
-import { config } from './config/config.js';
-import { validateEnvironment } from './config/environment.js';
-import { SonarrApiClient } from './api/sonarr-client.js';
-import { initializeTools, getAllTools, executeTool } from './tools/index.js';
-import { initializeResources, getAllResources, readResource } from './resources/index.js';
+import { logger } from './config/logger';
+import { config } from './config/config';
+import { validateEnvironment } from './config/environment';
+import { SonarrApiClient } from './api/sonarr-client';
+import { initializeTools, getAllTools, executeTool } from './tools/index';
+import { initializeResources, getAllResources, readResource } from './resources/index';
 
 /**
  * Main Sonarr MCP Server class

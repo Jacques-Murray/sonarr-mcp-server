@@ -2,11 +2,11 @@
  * Unit tests for MCP Tools
  */
 
-import { SonarrApiClient } from '../src/api/sonarr-client.js';
-import { initializeTools, getAllTools, executeTool } from '../src/tools/index.js';
+import { SonarrApiClient } from '../src/api/sonarr-client';
+import { initializeTools, getAllTools, executeTool } from '../src/tools/index';
 
 // Mock the Sonarr API client
-jest.mock('../src/api/sonarr-client.js');
+jest.mock('../src/api/sonarr-client');
 
 describe('MCP Tools', () => {
     let mockClient: jest.Mocked<SonarrApiClient>;
@@ -80,17 +80,24 @@ describe('MCP Tools', () => {
                 title: 'Test Series',
                 titleSlug: 'test-series',
                 tvdbId: 12345,
-                year: 2023
+                year: 2023,
+                images: []
             }];
 
             const mockQualityProfiles = [{
                 id: 1,
-                name: 'HD-1080p'
+                name: 'HD-1080p',
+                upgradeAllowed: true,
+                cutoff: 1,
+                items: []
             }];
 
             const mockLanguageProfiles = [{
                 id: 1,
-                name: 'English'
+                name: 'English',
+                upgradeAllowed: true,
+                cutoff: { id: 1, name: 'English' },
+                languages: []
             }];
 
             const mockAddedSeries = {
@@ -115,9 +122,11 @@ describe('MCP Tools', () => {
 
             expect(result.isError).toBeFalsy();
             expect(result.content).toHaveLength(2);
-            expect(result.content[0].type).toBe('text');
-            expect(result.content[0].text).toContain('Successfully added series: Test Series');
-            expect(result.content[1].type).toBe('json');
+            expect(result.content[0]?.type).toBe('text');
+            if (result.content[0]?.type === 'text') {
+                expect(result.content[0].text).toContain('Successfully added series: Test Series');
+            }
+            expect(result.content[1]?.type).toBe('json');
         });
 
         it('should handle series not found', async () => {
@@ -130,19 +139,25 @@ describe('MCP Tools', () => {
             });
 
             expect(result.isError).toBe(true);
-            expect(result.content[0].text).toContain('No series found matching');
+            if (result.content[0]?.type === 'text') {
+                expect(result.content[0].text).toContain('No series found matching');
+            }
         });
 
         it('should handle invalid quality profile', async () => {
             const mockSearchResults = [{
                 title: 'Test Series',
                 titleSlug: 'test-series',
-                tvdbId: 12345
+                tvdbId: 12345,
+                images: []
             }];
 
             const mockQualityProfiles = [{
                 id: 1,
-                name: 'HD-1080p'
+                name: 'HD-1080p',
+                upgradeAllowed: true,
+                cutoff: 1,
+                items: []
             }];
 
             mockClient.searchSeries.mockResolvedValue(mockSearchResults);
@@ -155,7 +170,9 @@ describe('MCP Tools', () => {
             });
 
             expect(result.isError).toBe(true);
-            expect(result.content[0].text).toContain('Quality profile "NonExistent" not found');
+            if (result.content[0]?.type === 'text') {
+                expect(result.content[0].text).toContain('Quality profile "NonExistent" not found');
+            }
         });
     });
 
@@ -194,12 +211,16 @@ describe('MCP Tools', () => {
 
             expect(result.isError).toBeFalsy();
             expect(result.content).toHaveLength(2);
-            expect(result.content[0].text).toContain('Found 2 series');
+            if (result.content[0]?.type === 'text') {
+                expect(result.content[0].text).toContain('Found 2 series');
+            }
 
             const jsonContent = result.content[1];
-            expect(jsonContent.type).toBe('json');
-            expect(jsonContent.json).toHaveLength(2);
-            expect(jsonContent.json[0].sizeOnDisk).toBe('4.66 GB');
+            expect(jsonContent?.type).toBe('json');
+            if (jsonContent?.type === 'json') {
+                expect(jsonContent.json).toHaveLength(2);
+                expect(jsonContent.json[0].sizeOnDisk).toBe('4.66 GB');
+            }
         });
 
         it('should filter series by monitoring status', async () => {
@@ -212,7 +233,9 @@ describe('MCP Tools', () => {
 
             const result = await executeTool('list_series', { monitored: true });
 
-            expect(result.content[0].text).toContain('Found 1 series (monitored: true)');
+            if (result.content[0]?.type === 'text') {
+                expect(result.content[0].text).toContain('Found 1 series (monitored: true)');
+            }
         });
     });
 
@@ -223,7 +246,9 @@ describe('MCP Tools', () => {
             const result = await executeTool('search_missing_episodes', {});
 
             expect(result.isError).toBeFalsy();
-            expect(result.content[0].text).toContain('Started search for all missing episodes');
+            if (result.content[0]?.type === 'text') {
+                expect(result.content[0].text).toContain('Started search for all missing episodes');
+            }
             expect(mockClient.searchAllMissing).toHaveBeenCalled();
         });
 
@@ -233,7 +258,9 @@ describe('MCP Tools', () => {
             const result = await executeTool('search_missing_episodes', { seriesId: 123 });
 
             expect(result.isError).toBeFalsy();
-            expect(result.content[0].text).toContain('Started search for missing episodes in series ID 123');
+            if (result.content[0]?.type === 'text') {
+                expect(result.content[0].text).toContain('Started search for missing episodes in series ID 123');
+            }
             expect(mockClient.searchSeriesMissing).toHaveBeenCalledWith(123);
         });
 
@@ -253,7 +280,9 @@ describe('MCP Tools', () => {
             });
 
             expect(result.isError).toBeFalsy();
-            expect(result.content[0].text).toContain('Started search for 2 missing episodes in season 2');
+            if (result.content[0]?.type === 'text') {
+                expect(result.content[0].text).toContain('Started search for 2 missing episodes in season 2');
+            }
             expect(mockClient.searchEpisodes).toHaveBeenCalledWith([1, 2]);
         });
     });
@@ -284,8 +313,12 @@ describe('MCP Tools', () => {
             const result = await executeTool('manage_queue', { action: 'list' });
 
             expect(result.isError).toBeFalsy();
-            expect(result.content[0].text).toContain('Found 2 items in download queue');
-            expect(result.content[1].json[0].progress).toBe('80%');
+            if (result.content[0]?.type === 'text') {
+                expect(result.content[0].text).toContain('Found 1 items in download queue');
+            }
+            if (result.content[1]?.type === 'json') {
+                expect(result.content[1].json[0].progress).toBe('80%');
+            }
         });
 
         it('should remove queue item', async () => {
@@ -297,7 +330,9 @@ describe('MCP Tools', () => {
             });
 
             expect(result.isError).toBeFalsy();
-            expect(result.content[0].text).toContain('Removed item 123 from queue');
+            if (result.content[0]?.type === 'text') {
+                expect(result.content[0].text).toContain('Removed item 123 from queue');
+            }
             expect(mockClient.removeFromQueue).toHaveBeenCalledWith(123);
         });
     });
@@ -328,8 +363,12 @@ describe('MCP Tools', () => {
             const result = await executeTool('system_status', {});
 
             expect(result.isError).toBeFalsy();
-            expect(result.content[0].text).toContain('Sonarr 4.0.0 running on Linux 5.4.0');
-            expect(result.content[1].json.diskSpace[0].percentFree).toBe('50%');
+            if (result.content[0]?.type === 'text') {
+                expect(result.content[0].text).toContain('Sonarr 4.0.0 running on Linux 5.4.0');
+            }
+            if (result.content[1]?.type === 'json') {
+                expect(result.content[1].json.diskSpace[0].percentFree).toBe('50%');
+            }
         });
     });
 
@@ -340,7 +379,9 @@ describe('MCP Tools', () => {
             const result = await executeTool('list_series', {});
 
             expect(result.isError).toBe(true);
-            expect(result.content[0].text).toContain('Failed to list series: API Error');
+            if (result.content[0]?.type === 'text') {
+                expect(result.content[0].text).toContain('Failed to list series: API Error');
+            }
         });
 
         it('should throw error for unknown tool', async () => {

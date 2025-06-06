@@ -19,7 +19,7 @@ declare const console: {
 };
 
 import dotenv from 'dotenv';
-import { SonarrMCPServer } from './mcp-server.js';
+import { SonarrMCPServer } from './mcp-server';
 
 // Load environment variables
 dotenv.config();
@@ -33,7 +33,7 @@ async function main(): Promise<void> {
 
     if (isTestMode) {
         // Import and run the test foundation
-        const testModule = await import('./test-foundation.js');
+        const testModule = await import('./test-foundation');
         const testServer = new testModule.SonarrMCPServer();
         await testServer.initialize();
     } else {
@@ -52,4 +52,4 @@ if (import.meta.url === `file://${process.argv[1]?.replace(/\\/g, '/')}`) {
 }
 
 // Export the MCP server class
-export { SonarrMCPServer } from './mcp-server.js';
+export { SonarrMCPServer } from './mcp-server';

@@ -10,9 +10,9 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.test' });
 
 // Set default test environment variables if not provided
-process.env.SONARR_API_URL = process.env.SONARR_API_URL || 'http://localhost:8989';
-process.env.SONARR_API_KEY = process.env.SONARR_API_KEY || 'test-api-key';
-process.env.MCP_LOG_LEVEL = process.env.MCP_LOG_LEVEL || 'ERROR';
+process.env['SONARR_API_URL'] = process.env['SONARR_API_URL'] || 'http://localhost:8989';
+process.env['SONARR_API_KEY'] = process.env['SONARR_API_KEY'] || 'test-api-key';
+process.env['MCP_LOG_LEVEL'] = process.env['MCP_LOG_LEVEL'] || 'ERROR';
 
 // Mock console to reduce test noise
 const originalConsole = console;

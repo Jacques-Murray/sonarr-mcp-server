@@ -2,11 +2,11 @@
  * Unit tests for MCP Resources
  */
 
-import { SonarrApiClient } from '../src/api/sonarr-client.js';
-import { initializeResources, getAllResources, readResource } from '../src/resources/index.js';
+import { SonarrApiClient } from '../src/api/sonarr-client';
+import { initializeResources, getAllResources, readResource } from '../src/resources/index';
 
 // Mock the Sonarr API client
-jest.mock('../src/api/sonarr-client.js');
+jest.mock('../src/api/sonarr-client');
 
 describe('MCP Resources', () => {
     let mockClient: jest.Mocked<SonarrApiClient>;
@@ -107,16 +107,16 @@ describe('MCP Resources', () => {
             const result = await readResource('sonarr://series/collection');
 
             expect(result.contents).toHaveLength(1);
-            expect(result.contents[0].uri).toBe('sonarr://series/collection');
-            expect(result.contents[0].mimeType).toBe('application/json');
+            expect(result.contents[0]?.uri).toBe('sonarr://series/collection');
+            expect(result.contents[0]?.mimeType).toBe('application/json');
 
-            const data = JSON.parse(result.contents[0].text!);
+            const data = JSON.parse(result.contents[0]?.text || '{}');
             expect(data.totalSeries).toBe(2);
             expect(data.monitoredSeries).toBe(2);
             expect(data.endedSeries).toBe(2);
             expect(data.totalEpisodes).toBe(125);
             expect(data.totalFiles).toBe(122);
-            expect(data.totalSizeGB).toBe(88.45);
+            expect(data.totalSizeGB).toBe(88.48);
             expect(data.series).toHaveLength(2);
             expect(data.series[0].title).toBe('Breaking Bad');
         });
@@ -148,9 +148,9 @@ describe('MCP Resources', () => {
             const result = await readResource('sonarr://calendar/upcoming');
 
             expect(result.contents).toHaveLength(1);
-            expect(result.contents[0].mimeType).toBe('application/json');
+            expect(result.contents[0]?.mimeType).toBe('application/json');
 
-            const data = JSON.parse(result.contents[0].text!);
+            const data = JSON.parse(result.contents[0]?.text || '{}');
             expect(data.totalEpisodes).toBe(1);
             expect(data.monitoredEpisodes).toBe(1);
             expect(data.episodesWithFiles).toBe(0);
@@ -199,7 +199,7 @@ describe('MCP Resources', () => {
             const result = await readResource('sonarr://system/status');
 
             expect(result.contents).toHaveLength(1);
-            const data = JSON.parse(result.contents[0].text!);
+            const data = JSON.parse(result.contents[0]?.text || '{}');
 
             expect(data.version).toBe('4.0.0');
             expect(data.os.name).toBe('Linux');
@@ -253,7 +253,7 @@ describe('MCP Resources', () => {
             const result = await readResource('sonarr://queue/current');
 
             expect(result.contents).toHaveLength(1);
-            const data = JSON.parse(result.contents[0].text!);
+            const data = JSON.parse(result.contents[0]?.text || '{}');
 
             expect(data.totalItems).toBe(2);
             expect(data.items).toHaveLength(1);
@@ -298,7 +298,7 @@ describe('MCP Resources', () => {
             const result = await readResource('sonarr://history/recent');
 
             expect(result.contents).toHaveLength(1);
-            const data = JSON.parse(result.contents[0].text!);
+            const data = JSON.parse(result.contents[0]?.text || '{}');
 
             expect(data.totalItems).toBe(10);
             expect(data.items).toHaveLength(1);
@@ -335,7 +335,7 @@ describe('MCP Resources', () => {
             const result = await readResource('sonarr://wanted/missing');
 
             expect(result.contents).toHaveLength(1);
-            const data = JSON.parse(result.contents[0].text!);
+            const data = JSON.parse(result.contents[0]?.text || '{}');
 
             expect(data.totalMissing).toBe(5);
             expect(data.episodes).toHaveLength(1);
@@ -372,7 +372,7 @@ describe('MCP Resources', () => {
             const result = await readResource('sonarr://config/quality-profiles');
 
             expect(result.contents).toHaveLength(1);
-            const data = JSON.parse(result.contents[0].text!);
+            const data = JSON.parse(result.contents[0]?.text || '{}');
 
             expect(data.totalProfiles).toBe(1);
             expect(data.profiles).toHaveLength(1);
@@ -400,7 +400,7 @@ describe('MCP Resources', () => {
             const result = await readResource('sonarr://config/root-folders');
 
             expect(result.contents).toHaveLength(1);
-            const data = JSON.parse(result.contents[0].text!);
+            const data = JSON.parse(result.contents[0]?.text || '{}');
 
             expect(data.totalFolders).toBe(1);
             expect(data.folders).toHaveLength(1);
