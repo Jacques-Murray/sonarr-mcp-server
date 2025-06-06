@@ -1,0 +1,111 @@
+# Dependencies (will be installed in container)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Source files (only need compiled dist/ in production)
+src/
+tests/
+
+# Build artifacts that will be generated during build
+dist/
+*.tsbuildinfo
+
+# Git and version control
+.git/
+.gitignore
+.gitattributes
+
+# Environment files (security - use .env.example as template)
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Documentation and project files
+README.md
+FOUNDATION_SETUP.md
+IMPLEMENTATION_STATUS.md
+*.md
+docs/
+documentation/
+
+# CI/CD files
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+Jenkinsfile
+
+# Testing files
+coverage/
+.nyc_output/
+*.lcov
+
+# Linting and formatting
+.eslintrc*
+.prettierrc*
+eslint.config.js
+
+# Package manager files (will use the ones copied explicitly)
+.npmrc
+.yarnrc
+
+# Log files
+*.log
+logs/
+
+# Cache directories
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Docker files (avoid recursive copying)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Development configuration
+tsconfig.json (will be copied explicitly in Dockerfile)

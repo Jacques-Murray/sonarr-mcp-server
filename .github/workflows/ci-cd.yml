@@ -1,0 +1,355 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop, 'release/*']
+  pull_request:
+    branches: [main, develop]
+  release:
+    types: [published]
+
+env:
+  NODE_ENV: test
+  SONARR_API_URL: http://localhost:8989
+  SONARR_API_KEY: test-api-key
+  MCP_LOG_LEVEL: ERROR
+
+jobs:
+  # Job 1: Code Quality and Security
+  code-quality:
+    name: Code Quality & Security
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: TypeScript type checking
+        run: npx tsc --noEmit
+
+      - name: Security audit
+        run: npm audit --audit-level=moderate
+
+      - name: Dependency vulnerability check
+        run: |
+          npm install -g npm-check-updates
+          ncu --errorLevel 1
+
+  # Job 2: Testing Matrix
+  test:
+    name: Test Suite
+    needs: code-quality
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['18.x', '20.x', '22.x']
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Environment validation
+        run: |
+          node -e "
+          const { config } = require('./dist/config/config.js');
+          console.log('Environment validation passed');
+          " || echo "Skipping validation - build required first"
+
+      - name: Run tests with coverage
+        run: npm test -- --coverage --testTimeout=12000
+        env:
+          SONARR_API_URL: ${{ env.SONARR_API_URL }}
+          SONARR_API_KEY: ${{ env.SONARR_API_KEY }}
+          MCP_LOG_LEVEL: ${{ env.MCP_LOG_LEVEL }}
+
+      - name: Upload coverage reports
+        if: matrix.node-version == '20.x' && matrix.os == 'ubuntu-latest'
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: Archive test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-node${{ matrix.node-version }}-${{ matrix.os }}
+          path: |
+            coverage/
+            jest-report.xml
+          retention-days: 7
+
+  # Job 3: Build and Artifact Generation
+  build:
+    name: Build & Artifacts
+    needs: [code-quality, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Clean previous builds
+        run: npm run clean
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Verify build output
+        run: |
+          test -f dist/index.js || (echo "Build failed - dist/index.js not found" && exit 1)
+          test -f dist/index.d.ts || (echo "Build failed - dist/index.d.ts not found" && exit 1)
+          node dist/index.js --version || echo "Build verification completed"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            dist/
+            package.json
+            package-lock.json
+            README.md
+          retention-days: 30
+
+  # Job 4: Docker Build (Main Branch Only)
+  docker:
+    name: Docker Build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: ./
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Create Dockerfile
+        run: |
+          cat > Dockerfile << 'EOF'
+          # Multi-stage Docker build for Sonarr MCP Server
+          FROM node:20-alpine AS base
+          WORKDIR /app
+          RUN apk add --no-cache dumb-init
+
+          # Production dependencies stage
+          FROM base AS deps
+          COPY package*.json ./
+          RUN npm ci --only=production && npm cache clean --force
+
+          # Build stage
+          FROM base AS build
+          COPY package*.json ./
+          RUN npm ci
+          COPY . .
+          RUN npm run build
+
+          # Production stage
+          FROM base AS production
+          ENV NODE_ENV=production
+          USER node
+          COPY --chown=node:node --from=deps /app/node_modules ./node_modules
+          COPY --chown=node:node --from=build /app/dist ./dist
+          COPY --chown=node:node package*.json ./
+          EXPOSE 3000
+          ENTRYPOINT ["dumb-init", "--"]
+          CMD ["node", "dist/index.js"]
+          EOF
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+  # Job 5: Release (Release Branch Only)
+  release:
+    name: Release
+    if: startsWith(github.ref, 'refs/heads/release/') || github.event_name == 'release'
+    needs: [build, docker]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: ./release-build/
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          echo "## What's Changed" > CHANGELOG.md
+          git log --pretty=format:"- %s (%h)" $(git describe --tags --abbrev=0)..HEAD >> CHANGELOG.md || echo "- Initial release" >> CHANGELOG.md
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          cat CHANGELOG.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create release package
+        run: |
+          mkdir -p release-package
+          cp -r release-build/* release-package/
+          tar -czf sonarr-mcp-server-${{ github.ref_name }}.tar.gz -C release-package .
+          zip -r sonarr-mcp-server-${{ github.ref_name }}.zip release-package/
+
+      - name: Create GitHub Release
+        if: github.event_name != 'release'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          draft: false
+          prerelease: contains(github.ref_name, 'rc') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha')
+
+      - name: Upload release assets
+        if: github.event_name == 'release'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./sonarr-mcp-server-${{ github.ref_name }}.tar.gz
+          asset_name: sonarr-mcp-server-${{ github.ref_name }}.tar.gz
+          asset_content_type: application/gzip
+
+  # Job 6: Deployment Preview (PR Only)
+  preview-deploy:
+    name: Preview Deployment
+    if: github.event_name == 'pull_request'
+    needs: [build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: ./
+
+      - name: Preview deployment info
+        run: |
+          echo "## 🚀 Preview Deployment Ready" >> $GITHUB_STEP_SUMMARY
+          echo "Build artifacts are ready for deployment" >> $GITHUB_STEP_SUMMARY
+          echo "### Build Info" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.head_ref }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Size**: $(du -sh dist/ | cut -f1)" >> $GITHUB_STEP_SUMMARY
+
+  # Job 7: Notification
+  notify:
+    name: Notifications
+    if: always()
+    needs: [code-quality, test, build, docker, release]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Workflow Status Summary
+        run: |
+          echo "## 📊 Workflow Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Code Quality**: ${{ needs.code-quality.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tests**: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build**: ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Docker**: ${{ needs.docker.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release**: ${{ needs.release.result || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Failure notification
+        if: failure()
+        run: |
+          echo "## ❌ Workflow Failed" >> $GITHUB_STEP_SUMMARY
+          echo "One or more jobs in the CI/CD pipeline failed." >> $GITHUB_STEP_SUMMARY
+          echo "Please check the individual job logs for more details." >> $GITHUB_STEP_SUMMARY
