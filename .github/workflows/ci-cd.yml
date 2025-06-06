@@ -88,14 +88,6 @@ jobs:
           SONARR_API_KEY: ${{ env.SONARR_API_KEY }}
           MCP_LOG_LEVEL: ${{ env.MCP_LOG_LEVEL }}
 
-      - name: Upload coverage reports
-        if: matrix.node-version == '20.x' && matrix.os == 'ubuntu-latest'
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./coverage/lcov.info
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
 
       - name: Archive test results
         if: always()
