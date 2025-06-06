@@ -1,7 +1,6 @@
 # Sonarr MCP Server
 
 [![CI/CD Pipeline](https://github.com/Jacques-Murray/sonarr-mcp-server/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Jacques-Murray/sonarr-mcp-server/actions/workflows/ci-cd.yml)
-[![codecov](https://codecov.io/gh/Jacques-Murray/sonarr-mcp-server/branch/main/graph/badge.svg)](https://codecov.io/gh/Jacques-Murray/sonarr-mcp-server)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/Jacques-Murray/sonarr-mcp-server)](https://github.com/Jacques-Murray/sonarr-mcp-server/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
@@ -97,13 +96,13 @@ git clone https://github.com/Jacques-Murray/sonarr-mcp-server.git
 cd sonarr-mcp-server
 ```
 
-2. **Install dependencies:**
+1. **Install dependencies:**
 
 ```bash
 npm install
 ```
 
-3. **Configure environment variables:**
+1. **Configure environment variables:**
 
 ```bash
 cp .env.example .env
@@ -132,13 +131,13 @@ ENABLE_SYSTEM_COMMANDS=true
 MAX_CONCURRENT_REQUESTS=10
 ```
 
-4. **Build the project:**
+1. **Build the project:**
 
 ```bash
 npm run build
 ```
 
-5. **Test the connection:**
+1. **Test the connection:**
 
 ```bash
 npm run start -- --test
@@ -362,7 +361,7 @@ Once integrated, you can interact with Sonarr using natural language:
 
 ## API Documentation
 
-### Overview
+### API Overview
 
 The Sonarr MCP Server provides a comprehensive set of tools and resources that map to Sonarr's API v4 capabilities. All operations are exposed through the MCP protocol, allowing AI assistants to interact with your Sonarr instance naturally.
 
@@ -403,7 +402,7 @@ Add a new TV series to Sonarr.
 
 **Example:**
 
-```
+```text
 Add "Breaking Bad" to my collection using HD-1080p quality profile in the /tv folder
 ```
 
@@ -419,7 +418,7 @@ List all series with optional filtering.
 
 **Example:**
 
-```
+```text
 Show me all currently monitored series
 ```
 
@@ -455,7 +454,7 @@ Search for missing episodes.
 
 **Example:**
 
-```
+```text
 Search for all missing episodes
 ```
 
@@ -492,7 +491,7 @@ View and manage download queue.
 
 **Example:**
 
-```
+```text
 Show me the current download queue
 ```
 
@@ -504,7 +503,7 @@ Get Sonarr system status and health.
 
 **Example:**
 
-```
+```text
 What's the current status of my Sonarr system?
 ```
 
@@ -520,7 +519,7 @@ View upcoming episodes.
 
 **Example:**
 
-```
+```text
 What episodes are coming up this week?
 ```
 
@@ -585,7 +584,7 @@ Configured root folders and storage information.
 
 **Adding a series:**
 
-```
+```text
 User: Add "The Mandalorian" to my collection using the HD-1080p profile
 Assistant: I'll add "The Mandalorian" to your Sonarr collection using the HD-1080p quality profile.
 
@@ -600,7 +599,7 @@ Successfully added "The Mandalorian" (2019) to your collection! The series has b
 
 **Checking system status:**
 
-```
+```text
 User: How is my Sonarr system doing?
 Assistant: Your Sonarr system is running well! Here's the current status:
 
@@ -618,13 +617,13 @@ Everything looks healthy!
 
 **Managing downloads:**
 
-```
+```text
 User: What's currently downloading?
 Assistant: Here's your current download queue:
 
 📥 Active Downloads (3 items):
 1. "House of the Dragon S02E08" - 85% complete (5 minutes remaining)
-2. "The Bear S03E01" - 45% complete (12 minutes remaining) 
+2. "The Bear S03E01" - 45% complete (12 minutes remaining)
 3. "Stranger Things S05E01" - 10% complete (45 minutes remaining)
 
 All downloads are progressing normally.
@@ -632,7 +631,7 @@ All downloads are progressing normally.
 
 ## Development Setup
 
-### Prerequisites
+### Development Prerequisites
 
 - **Node.js**: 18.0.0+ (LTS recommended)
 - **npm**: 8.0.0+ (or equivalent package manager)
@@ -649,14 +648,14 @@ cd sonarr-mcp-server
 npm install
 ```
 
-2. **Environment configuration:**
+1. **Environment configuration:**
 
 ```bash
 cp .env.example .env
 # Edit .env with your development Sonarr instance details
 ```
 
-3. **Development scripts:**
+1. **Development scripts:**
 
 ```bash
 # Start development server with hot reload
@@ -683,7 +682,7 @@ npm test
 # Run tests in watch mode
 npm run test:watch
 
-# Run with coverage report
+# Run with coverage report (generates local coverage reports)
 npm run test -- --coverage
 
 # Run specific test file
@@ -697,8 +696,27 @@ npm test -- --testTimeout=15000
 
 - **Unit Tests**: [`tests/`](tests/) directory contains unit tests for all modules
 - **Integration Tests**: Test actual Sonarr API interactions (requires test instance)
-- **Coverage**: Minimum 80% coverage requirement enforced in CI/CD
+- **Coverage**: Minimum 80% coverage requirement enforced in CI/CD, reports generated locally
 - **Test Environment**: Uses [`jest-environment-node`](tests/setup.ts) for proper Node.js simulation
+
+#### Local Coverage Reports
+
+When running tests with coverage, Jest generates comprehensive reports locally:
+
+```bash
+# Generate coverage reports in ./coverage/ directory
+npm test -- --coverage
+
+# View HTML coverage report (generated in ./coverage/lcov-report/index.html)
+# Open in browser to see detailed line-by-line coverage
+```
+
+Coverage reports include:
+
+- **Line Coverage**: Percentage of code lines executed
+- **Branch Coverage**: Percentage of code branches taken
+- **Function Coverage**: Percentage of functions called
+- **Statement Coverage**: Percentage of statements executed
 
 ### Code Quality
 
@@ -739,7 +757,7 @@ The project follows consistent coding standards:
 
 ### Project Structure
 
-```
+```text
 sonarr-mcp-server/
 ├── src/                    # Source code
 │   ├── api/               # Sonarr API client
@@ -770,6 +788,7 @@ ls -la dist/
 ```
 
 The build process:
+
 1. Cleans the `dist/` directory
 2. Compiles TypeScript using [`tsconfig.json`](tsconfig.json)
 3. Generates source maps for debugging
@@ -917,7 +936,7 @@ The pipeline tests across multiple environments:
 
 - **Node.js Versions**: 18.x, 20.x, 22.x
 - **Operating Systems**: Ubuntu Latest, Windows Latest, macOS Latest
-- **Test Coverage**: Comprehensive coverage reporting via [Codecov](https://codecov.io)
+- **Test Coverage**: Comprehensive local coverage reporting
 
 #### Pipeline Stages
 
@@ -1028,7 +1047,7 @@ The pipeline includes integration testing against actual Sonarr instances:
 
 ## Configuration
 
-### Environment Variables
+### Environment Variable Configuration
 
 The server supports comprehensive configuration through environment variables. See [`.env.example`](.env.example) for a complete template.
 
@@ -1111,6 +1130,7 @@ The project uses [`tsconfig.json`](tsconfig.json) for TypeScript compilation:
 #### Required Permissions
 
 The API key needs access to:
+
 - **Series Management**: Add, edit, delete series
 - **Episode Operations**: Search, monitor episodes
 - **Queue Management**: View and manage downloads
@@ -1230,82 +1250,96 @@ SONARR_VERIFY_SSL=true
 
 #### Connection Problems
 
-**Connection Refused**
-```
+#### Connection Refused
+
+```text
 Error: connect ECONNREFUSED 127.0.0.1:8989
 ```
 
 **Solutions:**
+
 1. Verify Sonarr is running: `curl http://localhost:8989`
 2. Check the `SONARR_API_URL` in your `.env` file
 3. Ensure firewall allows connections to port 8989
 4. For Docker: Use `host.docker.internal` instead of `localhost`
 
-**Network Timeout**
-```
+#### Network Timeout
+
+```text
 Error: Request timeout after 30000ms
 ```
 
 **Solutions:**
+
 1. Increase timeout: `SONARR_TIMEOUT=60`
 2. Check network connectivity
 3. Verify Sonarr isn't overloaded
 
 #### Authentication Issues
 
-**Invalid API Key**
-```
+#### Invalid API Key
+
+```text
 Error: 401 Unauthorized - Invalid API Key
 ```
 
 **Solutions:**
+
 1. Get correct API key from Sonarr: Settings → General → API Key
 2. Verify `.env` file has correct `SONARR_API_KEY`
 3. Ensure no extra spaces or quotes around the API key
 4. Restart the MCP server after changing the API key
 
-**Permission Denied**
-```
+#### Permission Denied
+
+```text
 Error: 403 Forbidden - Insufficient permissions
 ```
 
 **Solutions:**
+
 1. Verify API key has admin privileges
 2. Check Sonarr authentication settings
 3. Ensure Forms authentication is enabled
 
 #### SSL/TLS Issues
 
-**Certificate Verification Failed**
-```
+#### Certificate Verification Failed
+
+```text
 Error: unable to verify the first certificate
 ```
 
 **Solutions:**
+
 1. For self-signed certificates: `SONARR_VERIFY_SSL=false`
 2. Install proper SSL certificates
 3. Use HTTP instead of HTTPS for local instances
 
 #### Environment Configuration
 
-**Missing Environment Variables**
-```
+#### Missing Environment Variables
+
+```text
 Error: SONARR_API_KEY is required
 ```
 
 **Solutions:**
+
 1. Create `.env` file: `cp .env.example .env`
 2. Edit `.env` with your Sonarr details
 3. Verify environment variables are loaded: `node -e "console.log(process.env.SONARR_API_KEY)"`
 
 #### MCP Protocol Issues
 
-**MCP Client Connection Failed**
-```
+#### MCP Client Connection Failed
+
+```text
 Error: MCP transport error
 ```
 
 **Solutions:**
+
 1. Verify MCP client configuration
 2. Check file paths in client config
 3. Ensure executable permissions: `chmod +x dist/index.js`
@@ -1325,7 +1359,7 @@ DEBUG=sonarr:* npm start
 
 #### Debug Output Example
 
-```
+```text
 2024-01-15T10:30:45.123Z [DEBUG] Environment loaded: {"SONARR_API_URL":"http://localhost:8989"}
 2024-01-15T10:30:45.456Z [DEBUG] Sonarr client initialized with timeout: 30000ms
 2024-01-15T10:30:45.789Z [DEBUG] Testing connection to Sonarr...
@@ -1337,7 +1371,8 @@ DEBUG=sonarr:* npm start
 
 #### Connection Testing
 
-**Basic Connectivity Test**
+#### Basic Connectivity Test
+
 ```bash
 # Test MCP server startup
 npm run start -- --test
@@ -1354,7 +1389,8 @@ docker run --rm \
   --test
 ```
 
-**Network Connectivity Test**
+#### Network Connectivity Test
+
 ```bash
 # Test network connectivity
 telnet localhost 8989
@@ -1369,7 +1405,8 @@ curl -v -H "X-Api-Key: YOUR_API_KEY" \
 
 #### Configuration Validation
 
-**Environment Variable Checker**
+#### Environment Variable Checker
+
 ```bash
 # Create a test script
 cat > test-env.js << 'EOF'
@@ -1380,7 +1417,8 @@ EOF
 node test-env.js
 ```
 
-**Sonarr Version Compatibility**
+#### Sonarr Version Compatibility
+
 ```bash
 # Check Sonarr version
 curl -H "X-Api-Key: YOUR_API_KEY" \
@@ -1394,7 +1432,8 @@ curl -H "X-Api-Key: YOUR_API_KEY" \
 
 #### Container Networking
 
-**Cannot connect to Sonarr from container**
+#### Cannot connect to Sonarr from container
+
 ```bash
 # Use host networking (Linux only)
 docker run --network host \
@@ -1411,7 +1450,8 @@ docker run \
 
 #### Volume Permissions
 
-**Log directory permission issues**
+#### Log directory permission issues
+
 ```bash
 # Fix log directory permissions
 sudo chown -R 1001:1001 ./logs
@@ -1426,7 +1466,8 @@ docker run --user $(id -u):$(id -g) \
 
 #### High Memory Usage
 
-**Memory optimization**
+#### Memory optimization
+
 ```bash
 # Limit Node.js memory
 NODE_OPTIONS="--max-old-space-size=1024" npm start
@@ -1437,7 +1478,8 @@ docker stats sonarr-mcp-server
 
 #### Request Timeouts
 
-**Optimize request settings**
+#### Optimize request settings
+
 ```env
 # Increase timeouts for slow networks
 SONARR_TIMEOUT=60
@@ -1449,22 +1491,28 @@ MAX_CONCURRENT_REQUESTS=5
 
 #### Common Error Patterns
 
-**Rate Limiting**
-```
+#### Rate Limiting
+
+```text
 Rate limit exceeded, retrying in 5000ms
 ```
+
 Solution: Reduce `MAX_CONCURRENT_REQUESTS` or increase `SONARR_TIMEOUT`
 
-**Memory Leaks**
-```
+#### Memory Leaks
+
+```text
 JavaScript heap out of memory
 ```
+
 Solution: Set `NODE_OPTIONS="--max-old-space-size=2048"`
 
-**Parse Errors**
-```
+#### Parse Errors
+
+```text
 Unexpected token in JSON at position 0
 ```
+
 Solution: Check Sonarr API response format, may indicate authentication issues
 
 #### Log File Locations
@@ -1480,7 +1528,7 @@ docker logs sonarr-mcp-server
 docker logs sonarr-mcp-server 2>&1 | grep ERROR
 ```
 
-### Getting Help
+### Community Support
 
 #### Before Reporting Issues
 
@@ -1511,7 +1559,7 @@ MCP_LOG_LEVEL=DEBUG npm start 2>&1 | head -50
 cat .env | sed 's/API_KEY=.*/API_KEY=***redacted***/'
 ```
 
-#### Community Support
+#### Help Resources
 
 - **GitHub Discussions**: [General questions and discussions](https://github.com/Jacques-Murray/sonarr-mcp-server/discussions)
 - **GitHub Issues**: [Bug reports and feature requests](https://github.com/Jacques-Murray/sonarr-mcp-server/issues)
@@ -1550,6 +1598,7 @@ We welcome contributions from the community! This project follows standard open-
 ### Quick Start for Contributors
 
 1. **Fork and Clone**
+
    ```bash
    # Fork the repo on GitHub, then clone your fork
    git clone https://github.com/YOUR_USERNAME/sonarr-mcp-server.git
@@ -1560,6 +1609,7 @@ We welcome contributions from the community! This project follows standard open-
    ```
 
 2. **Set Up Development Environment**
+
    ```bash
    # Install dependencies
    npm install
@@ -1573,6 +1623,7 @@ We welcome contributions from the community! This project follows standard open-
    ```
 
 3. **Create Feature Branch**
+
    ```bash
    # Sync with upstream
    git fetch upstream
@@ -1612,10 +1663,24 @@ npm run test:watch
 ```
 
 **Test Coverage Requirements:**
+
 - New code must have **≥80% test coverage**
 - Critical paths require **≥90% coverage**
 - All public APIs must have unit tests
 - Integration tests for new Sonarr API endpoints
+- Coverage reports generated locally for development
+
+**Local Coverage Development:**
+
+```bash
+# Generate and view coverage reports locally
+npm test -- --coverage
+
+# Open HTML coverage report in browser
+open coverage/lcov-report/index.html  # macOS
+xdg-open coverage/lcov-report/index.html  # Linux
+start coverage/lcov-report/index.html  # Windows
+```
 
 #### Commit Message Guidelines
 
@@ -1630,6 +1695,7 @@ git commit -m "test(integration): add calendar endpoint tests"
 ```
 
 **Types:**
+
 - `feat`: New features
 - `fix`: Bug fixes
 - `docs`: Documentation changes
@@ -1643,12 +1709,14 @@ git commit -m "test(integration): add calendar endpoint tests"
 #### Before Submitting
 
 1. **Sync with upstream:**
+
    ```bash
    git fetch upstream
    git rebase upstream/main
    ```
 
 2. **Run quality checks:**
+
    ```bash
    npm run lint          # Fix any linting errors
    npm test              # Ensure all tests pass
@@ -1664,7 +1732,7 @@ git commit -m "test(integration): add calendar endpoint tests"
 
 When creating a PR, include:
 
-```markdown
+```text
 ## Description
 Brief description of changes and motivation.
 
@@ -1696,11 +1764,11 @@ Brief description of changes and motivation.
 
 ### Types of Contributions
 
-#### 🐛 Bug Reports
+#### 🐛 Issue Reporting
 
 Use the [issue template](.github/ISSUE_TEMPLATE/bug_report.md):
 
-```markdown
+```text
 **Bug Description**
 Clear description of the bug.
 
@@ -1827,9 +1895,9 @@ This project is licensed under the **MIT License** - see the [`LICENSE`](LICENSE
 - ❌ **Liability**: No warranty or liability
 - ❌ **Warranty**: No warranty provided
 
-### Copyright
+### License Terms
 
-```
+```text
 MIT License
 
 Copyright (c) 2024 Jacques Murray
@@ -1885,22 +1953,28 @@ SOFTWARE.
 
 ## Support & Community
 
-### Getting Help
+### Support Resources
 
 #### 🐛 Bug Reports
+
 Found a bug? Please report it through our issue tracker:
+
 - **GitHub Issues**: [Report Bug](https://github.com/Jacques-Murray/sonarr-mcp-server/issues/new?template=bug_report.md)
 - **Include**: Environment details, reproduction steps, expected vs actual behavior
 - **Response Time**: Usually within 48 hours
 
 #### 💬 General Discussion
+
 Have questions or want to discuss features?
+
 - **GitHub Discussions**: [Join the Conversation](https://github.com/Jacques-Murray/sonarr-mcp-server/discussions)
 - **Topics**: Feature requests, usage questions, integration help
 - **Community**: Connect with other users and contributors
 
 #### 📖 Documentation
+
 Comprehensive guides and references:
+
 - **Wiki**: [Extended Documentation](https://github.com/Jacques-Murray/sonarr-mcp-server/wiki)
 - **API Reference**: [Tool and Resource Documentation](https://github.com/Jacques-Murray/sonarr-mcp-server/wiki/API-Reference)
 - **Examples**: [Usage Examples and Tutorials](https://github.com/Jacques-Murray/sonarr-mcp-server/wiki/Examples)
@@ -1908,18 +1982,21 @@ Comprehensive guides and references:
 ### Project Resources
 
 #### 🚀 Quick Links
+
 - **Repository**: [GitHub](https://github.com/Jacques-Murray/sonarr-mcp-server)
 - **Releases**: [Latest Versions](https://github.com/Jacques-Murray/sonarr-mcp-server/releases)
 - **Docker Images**: [GitHub Container Registry](https://github.com/Jacques-Murray/sonarr-mcp-server/pkgs/container/sonarr-mcp-server)
 - **CI/CD Status**: [GitHub Actions](https://github.com/Jacques-Murray/sonarr-mcp-server/actions)
 
 #### 📊 Project Status
+
 - **Build Status**: [![CI/CD](https://github.com/Jacques-Murray/sonarr-mcp-server/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Jacques-Murray/sonarr-mcp-server/actions/workflows/ci-cd.yml)
-- **Code Coverage**: [![codecov](https://codecov.io/gh/Jacques-Murray/sonarr-mcp-server/branch/main/graph/badge.svg)](https://codecov.io/gh/Jacques-Murray/sonarr-mcp-server)
 - **Latest Release**: [![GitHub release](https://img.shields.io/github/v/release/Jacques-Murray/sonarr-mcp-server)](https://github.com/Jacques-Murray/sonarr-mcp-server/releases)
 
 #### 🤝 Contributing
+
 Want to contribute? We'd love your help!
+
 - **Contributing Guide**: [How to Contribute](https://github.com/Jacques-Murray/sonarr-mcp-server#contributing)
 - **Good First Issues**: [Beginner-Friendly Tasks](https://github.com/Jacques-Murray/sonarr-mcp-server/labels/good%20first%20issue)
 - **Development Setup**: [Local Development Guide](https://github.com/Jacques-Murray/sonarr-mcp-server#development-setup)
@@ -1927,26 +2004,27 @@ Want to contribute? We'd love your help!
 ### Maintenance & Updates
 
 #### Release Schedule
+
 - **Major Releases**: Every 3-6 months with significant new features
 - **Minor Releases**: Monthly with feature additions and improvements
 - **Patch Releases**: As needed for bug fixes and security updates
 - **LTS Support**: Long-term support for major versions
 
 #### Compatibility
+
 - **Sonarr**: v4.0.0+ (actively tested with latest versions)
 - **Node.js**: 18.x, 20.x, 22.x (LTS versions recommended)
 - **MCP Protocol**: v1.x (following specification updates)
 - **Operating Systems**: Linux, macOS, Windows
 
 #### Security
+
 - **Security Policy**: [Security Guidelines](https://github.com/Jacques-Murray/sonarr-mcp-server/security/policy)
 - **Vulnerability Reporting**: [security@example.com](mailto:security@example.com)
 - **Dependency Updates**: Automated dependency scanning and updates
 - **Security Audits**: Regular security reviews and penetration testing
 
 ---
-
-<div align="center">
 
 ### Made with ❤️ for the Sonarr and AI Automation Community
 
@@ -1961,5 +2039,3 @@ Want to contribute? We'd love your help!
 [![GitHub stars](https://img.shields.io/github/stars/Jacques-Murray/sonarr-mcp-server?style=social)](https://github.com/Jacques-Murray/sonarr-mcp-server/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/Jacques-Murray/sonarr-mcp-server?style=social)](https://github.com/Jacques-Murray/sonarr-mcp-server/network/members)
 [![GitHub watchers](https://img.shields.io/github/watchers/Jacques-Murray/sonarr-mcp-server?style=social)](https://github.com/Jacques-Murray/sonarr-mcp-server/watchers)
-
-</div>
