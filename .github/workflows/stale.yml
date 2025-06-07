@@ -1,0 +1,58 @@
+name: Stale Branch Cleanup
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Run weekly at midnight on Sunday
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  cleanup-merged-branches:
+    runs-on: ubuntu-latest
+    name: Clean up merged branches
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for branch analysis
+          
+      - name: Delete merged branches
+        run: |
+          # Get list of fully merged branches
+          MERGED_BRANCHES=$(git branch --merged | grep -v "main\|develop\|release/")
+          
+          # Delete each merged branch
+          for branch in $MERGED_BRANCHES; do
+            git push origin --delete $branch
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            
+  cleanup-stale:
+    runs-on: ubuntu-latest
+    name: Clean up stale branches and PRs
+    steps:
+      - name: Check stale items
+        uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          # PR settings
+          stale-pr-message: "This PR has been inactive for 30 days and has been marked as stale."
+          close-pr-message: "This PR was closed due to inactivity."
+          days-before-pr-stale: 30
+          days-before-pr-close: 7
+          stale-pr-label: "stale"
+          exempt-pr-labels: "no-stale"
+          # Issue settings (disabled)
+          days-before-issue-stale: -1
+          days-before-issue-close: -1
+          # General settings
+          operations-per-run: 100
+          ascending: true  # Process oldest first
+          close-pr-label: "closed-stale"
+          remove-stale-when-updated: true
+          debug-only: false
+          enable-statistics: true
+          start-date: ""  # Process all items
+          exempt-all-milestones: false
+          exempt-all-assignees: false
+          any-of-labels: ""
+          any-of-pr-labels: ""
