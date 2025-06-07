@@ -14,6 +14,12 @@ export default [
                 sourceType: 'module',
                 project: './tsconfig.json',
             },
+            globals: {
+                process: 'readonly',
+                __dirname: 'readonly',
+                __filename: 'readonly',
+                Buffer: 'readonly',
+            },
         },
         plugins: {
             '@typescript-eslint': tseslint,
@@ -21,9 +27,9 @@ export default [
         rules: {
             ...tseslint.configs.recommended.rules,
             '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-            '@typescript-eslint/no-explicit-any': 'warn',
-            '@typescript-eslint/explicit-function-return-type': 'warn',
-            '@typescript-eslint/no-non-null-assertion': 'warn',
+            '@typescript-eslint/no-explicit-any': 'error',
+            '@typescript-eslint/explicit-function-return-type': 'error',
+            '@typescript-eslint/no-non-null-assertion': 'error',
             'prefer-const': 'error',
             'no-var': 'error',
             'no-console': 'warn',
@@ -47,6 +53,10 @@ export default [
                 afterEach: 'readonly',
                 beforeAll: 'readonly',
                 afterAll: 'readonly',
+                process: 'readonly',
+                __dirname: 'readonly',
+                __filename: 'readonly',
+                Buffer: 'readonly',
             },
         },
         plugins: {
@@ -55,7 +65,7 @@ export default [
         rules: {
             ...tseslint.configs.recommended.rules,
             '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-            '@typescript-eslint/no-explicit-any': 'warn',
+            '@typescript-eslint/no-explicit-any': 'error',
             '@typescript-eslint/explicit-function-return-type': 'off',
             '@typescript-eslint/no-non-null-assertion': 'off',
             'prefer-const': 'error',

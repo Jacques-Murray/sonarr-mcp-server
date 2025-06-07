@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import { setTimeout } from 'timers/promises';
 import { logger } from '../config/logger';
 import type { SonarrConfig } from '../config/config';
 import type {
@@ -16,7 +17,7 @@ export class SonarrApiError extends Error {
     constructor(
         message: string,
         public statusCode?: number,
-        public response?: any
+        public response?: unknown
     ) {
         super(message);
         this.name = 'SonarrApiError';
@@ -87,29 +88,38 @@ export class SonarrApiClient {
     /**
      * Extract meaningful error message from axios error
      */
-    private extractErrorMessage(error: any): string {
-        if (error.response) {
-            // Server responded with error status
-            const data = error.response.data;
-            if (typeof data === 'string') {
-                return data;
+    private extractErrorMessage(error: unknown): string {
+        if (error instanceof Error) {
+            if ('response' in error && error.response) {
+                const response = error.response as {
+                    data?: unknown;
+                    status?: number;
+                    statusText?: string;
+                };
+                
+                const data = response.data;
+                if (typeof data === 'string') {
+                    return data;
+                }
+                if (data && typeof data === 'object') {
+                    if ('message' in data && typeof data.message === 'string') {
+                        return data.message;
+                    }
+                    if ('error' in data && typeof data.error === 'string') {
+                        return data.error;
+                    }
+                }
+                return `HTTP ${response.status || 'unknown'}: ${response.statusText || 'Unknown Error'}`;
             }
-            if (data?.message) {
-                return data.message;
-            }
-            if (data?.error) {
-                return data.error;
-            }
-            return `HTTP ${error.response.status}: ${error.response.statusText}`;
-        }
 
-        if (error.request) {
-            // Request made but no response received
-            return 'No response from Sonarr server';
-        }
+            if ('request' in error) {
+                return 'No response from Sonarr server';
+            }
 
-        // Something else happened
-        return error.message || 'Unknown error';
+            return error.message;
+        }
+        
+        return 'Unknown error';
     }
 
     /**
@@ -134,7 +144,7 @@ export class SonarrApiClient {
         operation: () => Promise<T>,
         retries: number = this.config.maxRetries
     ): Promise<T> {
-        let lastError: Error;
+        let lastError: Error = new Error('Operation failed');
 
         for (let attempt = 0; attempt <= retries; attempt++) {
             try {
@@ -154,11 +164,11 @@ export class SonarrApiClient {
                 const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
                 logger.warn(`Sonarr API attempt ${attempt + 1} failed, retrying in ${delay}ms:`, error);
 
-                await new Promise<void>(resolve => setTimeout(resolve, delay));
+                await setTimeout(delay);
             }
         }
 
-        throw lastError!;
+        throw lastError;
     }
 
     // ============================================================================
