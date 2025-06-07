@@ -1,0 +1,76 @@
+name: Quality Checks
+
+on:
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * 1' # Run weekly on Mondays
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run dependency security audit
+      run: npm audit
+      
+    - name: Run Snyk security scan
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        
+    - name: Type Coverage Analysis
+      run: |
+        npx type-coverage --detail --strict
+        
+    - name: Run SonarCloud Analysis
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      with:
+        args: >
+          -Dsonar.organization=jacques-murray
+          -Dsonar.projectKey=Jacques-Murray_sonarr-mcp-server
+          -Dsonar.sources=src
+          -Dsonar.tests=tests
+          -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
+          -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+          
+    - name: Check for duplicate code
+      uses: platisd/duplicate-code-detection-tool@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        directories: src
+        
+    - name: Report Quality Results
+      if: always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const summary = `### Quality Check Results
+          - Security Audit: ${{ steps.audit.outcome }}
+          - Snyk Scan: ${{ steps.snyk.outcome }}
+          - Type Coverage: ${{ steps.types.outcome }}
+          - Code Quality: ${{ steps.sonar.outcome }}
+          - Duplicate Code: ${{ steps.duplicates.outcome }}
+          
+          [View detailed SonarCloud report](https://sonarcloud.io/dashboard?id=Jacques-Murray_sonarr-mcp-server)
+          `;
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.name,
+            body: summary
+          });

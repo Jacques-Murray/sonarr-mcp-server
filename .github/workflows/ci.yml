@@ -1,0 +1,72 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: TypeScript compilation check
+      run: npm run build
+      
+    - name: Run ESLint
+      run: npm run lint
+      
+    - name: Run tests with coverage
+      run: npm test -- --coverage
+      
+    - name: Upload coverage reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: coverage/
+        
+    - name: Post Coverage Comment
+      uses: MishaKav/jest-coverage-comment@v1.0.23
+      with:
+        coverage-path: ./coverage/coverage-final.json
+        title: Code Coverage Report
+        
+    - name: Check branch protection
+      run: |
+        if [[ "${{ github.base_ref }}" != "main" ]]; then
+          echo "Error: Pull requests must target the main branch"
+          exit 1
+        fi
+        
+    - name: Check PR title conventional commit
+      uses: amannn/action-semantic-pull-request@v5
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Report Status
+      if: always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const summary = `### CI Pipeline Status
+          - Build: ${{ job.status }}
+          - TypeScript: ${{ steps.typescript.outcome }}
+          - ESLint: ${{ steps.eslint.outcome }}
+          - Tests: ${{ steps.tests.outcome }}
+          `;
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.name,
+            body: summary
+          });

@@ -1,0 +1,106 @@
+name: Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+        registry-url: 'https://registry.npmjs.org'
+    
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run build validation
+      run: |
+        npm run lint
+        npm run test
+        npm run build
+        
+    - name: Generate changelog
+      id: changelog
+      run: |
+        PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        if [ -z "$PREVIOUS_TAG" ]; then
+          echo "CHANGELOG=$(git log --pretty=format:'- %s' ${{ github.sha }})" >> $GITHUB_OUTPUT
+        else
+          echo "CHANGELOG=$(git log --pretty=format:'- %s' $PREVIOUS_TAG..${{ github.sha }})" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Create package
+      run: |
+        npm pack
+        echo "PACKAGE_NAME=$(ls *.tgz)" >> $GITHUB_ENV
+        
+    - name: Create GitHub Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        name: Release ${{ github.ref_name }}
+        body: ${{ steps.changelog.outputs.CHANGELOG }}
+        draft: false
+        prerelease: false
+        files: |
+          ${{ env.PACKAGE_NAME }}
+          LICENSE
+          README.md
+          
+    - name: Publish to NPM
+      if: success()
+      run: npm publish
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist
+        path: dist/
+        
+    - name: Report Release Status
+      if: always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const status = '${{ job.status }}' === 'success' ? '✅' : '❌';
+          const summary = `### Release Status ${status}
+          
+          Version: ${process.env.GITHUB_REF_NAME}
+          Package: ${process.env.PACKAGE_NAME}
+          
+          - Build: ${{ steps.build.outcome }}
+          - Tests: ${{ steps.test.outcome }}
+          - NPM Publish: ${{ steps.publish.outcome }}
+          
+          [View Release](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/releases/tag/${process.env.GITHUB_REF_NAME})
+          `;
+          
+          if ('${{ job.status }}' !== 'success') {
+            core.setFailed('Release pipeline failed');
+          }
+          
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.name,
+            issue_number: context.issue.number,
+            body: summary
+          });
